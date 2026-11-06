@@ -1,0 +1,41 @@
+
+name: Build JARVIS APK
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y git zip unzip build-essential python3-pip python3-venv libffi-dev libssl-dev autoconf libtool pkg-config zlib1g-dev
+
+      - name: Setup Python
+        run: |
+          python3 -m venv .venv
+          .venv/bin/pip install --upgrade pip setuptools wheel
+          .venv/bin/pip install buildozer cython==0.29.33
+
+      - name: Build APK
+        run: |
+          export PATH="$GITHUB_WORKSPACE/.venv/bin:$PATH"
+          buildozer android debug
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: JARVIS-APK
+          path: bin/*.apk
